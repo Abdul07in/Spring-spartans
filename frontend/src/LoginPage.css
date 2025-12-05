@@ -1,0 +1,355 @@
+.page-container {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+/* Header */
+.header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 2rem;
+    background-color: white;
+    border-bottom: 1px solid #eee;
+}
+
+.logo {
+    font-weight: bold;
+    font-size: 1.5rem;
+    color: var(--primary-blue);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.nav-menu {
+    display: flex;
+    gap: 2rem;
+    font-size: 0.9rem;
+    color: var(--primary-blue);
+}
+
+.nav-item {
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.icon-btn {
+    padding: 0.5rem;
+    border: 1px solid var(--border-color);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.investor-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    font-weight: 600;
+    color: var(--primary-blue);
+}
+
+.sign-in-btn {
+    background-color: var(--primary-orange);
+    color: white;
+    padding: 0.5rem 1.5rem;
+    border-radius: 4px;
+    font-weight: 600;
+}
+
+/* Main Content */
+.main-content {
+    flex: 1;
+    padding: 2rem 4rem;
+    max-width: 1400px;
+    margin: 0 auto;
+    width: 100%;
+}
+
+.page-title {
+    font-size: 2rem;
+    color: var(--primary-blue);
+    margin-bottom: 2rem;
+}
+
+.content-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 2rem;
+}
+
+/* Login Card */
+.login-card {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    display: flex;
+    padding: 3rem;
+    min-height: 500px;
+}
+
+.qr-section {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding-right: 2rem;
+}
+
+.qr-placeholder {
+    width: 150px;
+    height: 150px;
+    background-color: #f0f0f0;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+
+.qr-overlay-btn {
+    position: absolute;
+    background-color: var(--primary-orange);
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: bold;
+}
+
+.qr-text h3 {
+    color: var(--primary-blue);
+    margin-bottom: 0.5rem;
+}
+
+.qr-text p {
+    font-size: 0.8rem;
+    color: #666;
+    max-width: 250px;
+}
+
+.divider {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 1px;
+    background-color: #eee;
+    position: relative;
+    margin: 0 1rem;
+}
+
+.divider span {
+    position: absolute;
+    background: white;
+    padding: 0.5rem;
+    color: #666;
+    font-size: 0.9rem;
+}
+
+.form-section {
+    flex: 1;
+    padding-left: 2rem;
+    display: flex;
+    flex-direction: column;
+}
+
+.form-header {
+    font-size: 1.5rem;
+    color: var(--primary-blue);
+    margin-bottom: 2rem;
+    font-weight: 600;
+}
+
+.input-group {
+    margin-bottom: 1rem;
+}
+
+.input-group input {
+    width: 100%;
+    padding: 0.75rem;
+    border: none;
+    border-bottom: 1px solid #ccc;
+    font-size: 1rem;
+    outline: none;
+}
+
+.input-group input:focus {
+    border-bottom-color: var(--primary-orange);
+}
+
+.forgot-link {
+    display: block;
+    text-align: right;
+    color: var(--primary-orange);
+    font-size: 0.8rem;
+    margin-bottom: 1.5rem;
+}
+
+.action-btn {
+    width: 100%;
+    padding: 0.75rem;
+    border-radius: 4px;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    transition: all 0.2s;
+}
+
+.next-btn {
+    background-color: var(--primary-orange);
+    color: white;
+}
+
+.register-btn {
+    background-color: white;
+    border: 1px solid var(--primary-orange);
+    color: var(--primary-orange);
+}
+
+.or-divider {
+    text-align: center;
+    margin: 1rem 0;
+    color: #999;
+    font-size: 0.9rem;
+    position: relative;
+}
+
+.or-divider::before,
+.or-divider::after {
+    content: "";
+    display: inline-block;
+    width: 40%;
+    height: 1px;
+    background-color: #eee;
+    vertical-align: middle;
+    margin: 0 0.5rem;
+}
+
+.google-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    border: 1px solid #ddd;
+    background: white;
+    color: #333;
+}
+
+/* Side Cards */
+.side-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.side-card {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 12px;
+    display: flex;
+    gap: 1rem;
+    align-items: flex-start;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.side-card:hover {
+    transform: translateY(-2px);
+}
+
+.card-icon {
+    width: 40px;
+    height: 40px;
+    background-color: #FFF5F0;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--primary-orange);
+    flex-shrink: 0;
+}
+
+.card-content h3 {
+    color: var(--primary-blue);
+    font-size: 1.1rem;
+    margin-bottom: 0.25rem;
+}
+
+.card-content p {
+    font-size: 0.85rem;
+    color: #666;
+    line-height: 1.4;
+}
+
+/* Footer (Simple version) */
+.footer-promo {
+    margin-top: 2rem;
+    background: linear-gradient(to right, #A0522D, #CD853F);
+    /* Placeholder gradient */
+    border-radius: 12px;
+    padding: 2rem;
+    color: white;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    overflow: hidden;
+    position: relative;
+}
+
+.promo-content h2 {
+    font-size: 2.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.promo-content p {
+    font-size: 1.2rem;
+    margin-bottom: 2rem;
+}
+
+.promo-link {
+    color: white;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+@media (max-width: 1024px) {
+    .content-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .login-card {
+        flex-direction: column;
+    }
+
+    .divider {
+        width: 100%;
+        height: 1px;
+        margin: 2rem 0;
+    }
+
+    .qr-section {
+        padding-right: 0;
+    }
+
+    .form-section {
+        padding-left: 0;
+    }
+}
