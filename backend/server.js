@@ -243,6 +243,16 @@ app.delete('/api/users/:id', (req, res) => {
     }
 });
 
+// Get Owners List (for Admin dropdowns)
+app.get('/api/owners', (req, res) => {
+    const appOwners = [...new Set(projects.map(p => p.owner))].filter(Boolean);
+    const busOwners = [...new Set(projects.map(p => p.businessOwner))].filter(Boolean);
+    res.json({
+        applicationOwners: appOwners,
+        businessOwners: busOwners
+    });
+});
+
 app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
 });

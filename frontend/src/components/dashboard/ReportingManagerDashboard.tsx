@@ -4,6 +4,7 @@ import { Users, FileText, FileClock, Layers, UserCog, LogOut, Plus } from 'lucid
 import KPICard from './KPICard';
 import PendingRequestsTable from './PendingRequestsTable';
 import RaiseRequestModal from './RaiseRequestModal';
+import MyRequestsModal from './MyRequestsModal';
 import ReportingManagerApplications from './ReportingManagerApplications';
 import { ApplicationSummary, DashboardStats, ReviewRequest } from '../../types/dashboard';
 
@@ -24,6 +25,9 @@ const ReportingManagerDashboard: React.FC = () => {
     const [isRaiseRequestModalOpen, setIsRaiseRequestModalOpen] = useState(false);
     const navigate = useNavigate();
 
+    const [myRequests, setMyRequests] = useState<ReviewRequest[]>([]);
+    const [isMyRequestsModalOpen, setIsMyRequestsModalOpen] = useState(false);
+
     // Fetch Requests from API
     useEffect(() => {
         setLoading(true);
@@ -43,6 +47,12 @@ const ReportingManagerDashboard: React.FC = () => {
                 // Fetch Requests
                 const reqRes = await fetch('http://localhost:5000/api/requests?role=manager');
                 const reqData = await reqRes.json();
+
+                // Separate incoming (for review) and outgoing (my requests)
+                // Filter requests initiated by manager for 'My Requests'
+                const outgoing = reqData.filter((r: ReviewRequest) => r.initiatedBy === 'manager');
+                setMyRequests(outgoing);
+
                 setRequests(reqData);
             } catch (err) {
                 console.error("Error fetching dashboard data:", err);
@@ -162,12 +172,34 @@ const ReportingManagerDashboard: React.FC = () => {
                     </div>
                     <div className="flex items-center space-x-4">
                         <button
+                            onClick={() => setIsMyRequestsModalOpen(true)}
+                            className="inline-flex items-center px-3 py-2 border border-blue-600 text-sm leading-4 font-medium rounded-md text-blue-600 bg-white hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors mr-2"
+                        >
+                            <FileClock className="mr-2 h-4 w-4" />
+                            My Requests
+                        </button>
+                        <button
                             onClick={() => setIsRaiseRequestModalOpen(true)}
                             className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors"
                         >
                             <Plus size={16} className="mr-2" />
                             Raise Request
                         </button>
+
+                        <RaiseRequestModal
+                            isOpen={isRaiseRequestModalOpen}
+                            onClose={() => setIsRaiseRequestModalOpen(false)}
+                            onSubmit={handleRaiseRequestSubmit}
+                        />
+
+                        <MyRequestsModal
+                            isOpen={isMyRequestsModalOpen}
+                            onClose={() => setIsMyRequestsModalOpen(false)}
+                            requests={myRequests}
+                        />
+
+                        {/* KPI Grid */}
+
                         <button
                             onClick={() => navigate('/manage-access')}
                             className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors"

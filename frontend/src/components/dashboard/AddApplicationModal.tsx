@@ -5,9 +5,11 @@ interface AddApplicationModalProps {
     isOpen: boolean;
     onClose: () => void;
     onSubmit: (data: any) => void;
+    existingAppOwners: string[];
+    existingBusinessOwners: string[];
 }
 
-const AddApplicationModal: React.FC<AddApplicationModalProps> = ({ isOpen, onClose, onSubmit }) => {
+const AddApplicationModal: React.FC<AddApplicationModalProps> = ({ isOpen, onClose, onSubmit, existingAppOwners, existingBusinessOwners }) => {
     const [formData, setFormData] = useState({
         applicationName: '',
         owner: '',
@@ -17,7 +19,7 @@ const AddApplicationModal: React.FC<AddApplicationModalProps> = ({ isOpen, onClo
 
     const [newModule, setNewModule] = useState('');
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
     };
@@ -79,27 +81,33 @@ const AddApplicationModal: React.FC<AddApplicationModalProps> = ({ isOpen, onClo
                     <div className="grid grid-cols-2 gap-4">
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Application Owner</label>
-                            <input
-                                type="text"
+                            <select
                                 name="owner"
                                 required
                                 value={formData.owner}
                                 onChange={handleChange}
                                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                                placeholder="Owner Name"
-                            />
+                            >
+                                <option value="">Select Owner</option>
+                                {existingAppOwners.map(owner => (
+                                    <option key={owner} value={owner}>{owner}</option>
+                                ))}
+                            </select>
                         </div>
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Business Owner</label>
-                            <input
-                                type="text"
+                            <select
                                 name="businessOwner"
                                 required
                                 value={formData.businessOwner}
                                 onChange={handleChange}
                                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                                placeholder="Business Owner Name"
-                            />
+                            >
+                                <option value="">Select Business Owner</option>
+                                {existingBusinessOwners.map(owner => (
+                                    <option key={owner} value={owner}>{owner}</option>
+                                ))}
+                            </select>
                         </div>
                     </div>
 

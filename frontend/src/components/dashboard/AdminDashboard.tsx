@@ -22,6 +22,8 @@ const AdminDashboard: React.FC = () => {
         totalReportingManagers: 0
     });
     const [applications, setApplications] = useState<ApplicationSummary[]>([]);
+    const [appOwners, setAppOwners] = useState<string[]>([]);
+    const [busOwners, setBusOwners] = useState<string[]>([]);
     const [loading, setLoading] = useState(false);
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const navigate = useNavigate();
@@ -38,6 +40,12 @@ const AdminDashboard: React.FC = () => {
             const appsRes = await fetch('http://localhost:5000/api/applications?role=admin');
             const appsData = await appsRes.json();
             setApplications(appsData);
+
+            // Fetch Owners (NEW)
+            const ownersRes = await fetch('http://localhost:5000/api/owners');
+            const ownersData = await ownersRes.json();
+            setAppOwners(ownersData.applicationOwners);
+            setBusOwners(ownersData.businessOwners);
         } catch (error) {
             console.error("Error fetching admin dashboard data:", error);
         } finally {
@@ -167,6 +175,8 @@ const AdminDashboard: React.FC = () => {
                     isOpen={isAddModalOpen}
                     onClose={() => setIsAddModalOpen(false)}
                     onSubmit={handleAddApplication}
+                    existingAppOwners={appOwners}
+                    existingBusinessOwners={busOwners}
                 />
             </main>
         </div>
