@@ -6,6 +6,8 @@ const LoginPage = () => {
   const navigate = useNavigate();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [otp, setOtp] = useState('');
+  const [step, setStep] = useState<'credentials' | 'otp'>('credentials');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -15,22 +17,38 @@ const LoginPage = () => {
     setLoading(true);
 
     try {
-      const response = await fetch('http://localhost:5000/api/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ username, password }),
-      });
+      if (step === 'credentials') {
+        const response = await fetch('http://localhost:5000/api/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password }),
+        });
+        const data = await response.json();
 
-      const data = await response.json();
-
-      if (data.success) {
-        localStorage.setItem('role', data.role);
-        // localStorage.setItem('token', data.token); // Store token if backend sends one
-        navigate(data.redirect);
+        if (data.success && data.requireOtp) {
+          setStep('otp');
+        } else if (data.success) {
+          // Fallback if backend doesn't enforce OTP (shouldn't happen with new backend)
+          localStorage.setItem('role', data.role);
+          navigate(data.redirect);
+        } else {
+          setError(data.message || 'Login failed');
+        }
       } else {
-        setError(data.message || 'Login failed');
+        // OTP Verification
+        const response = await fetch('http://localhost:5000/api/verify-otp', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, otp }),
+        });
+        const data = await response.json();
+
+        if (data.success) {
+          localStorage.setItem('role', data.role);
+          navigate(data.redirect);
+        } else {
+          setError(data.message || 'Invalid OTP');
+        }
       }
     } catch (err) {
       setError('Unable to connect to server. Please try again.');
@@ -66,59 +84,109 @@ const LoginPage = () => {
                 </div>
               </div>
             )}
-            <div>
-              <label htmlFor="username" className="block text-sm font-medium text-gray-700">
-                Username
-              </label>
-              <div className="mt-1 relative rounded-md shadow-sm">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <User className="h-5 w-5 text-gray-400" />
+            {step === 'credentials' ? (
+              <>
+                <div>
+                  <label htmlFor="username" className="block text-sm font-medium text-gray-700">
+                    Username
+                  </label>
+                  <div className="mt-1 relative rounded-md shadow-sm">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <User className="h-5 w-5 text-gray-400" />
+                    </div>
+                    <input
+                      id="username"
+                      name="username"
+                      type="text"
+                      required
+                      value={username}
+                      onChange={(e) => setUsername(e.target.value)}
+                      className="focus:ring-indigo-500 focus:border-indigo-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-md py-2 border"
+                      placeholder="Enter your username"
+                    />
+                  </div>
                 </div>
-                <input
-                  id="username"
-                  name="username"
-                  type="text"
-                  required
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  className="focus:ring-indigo-500 focus:border-indigo-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-md py-2 border"
-                  placeholder="Enter your username"
-                />
-              </div>
-            </div>
 
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                Password
-              </label>
-              <div className="mt-1 relative rounded-md shadow-sm">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Lock className="h-5 w-5 text-gray-400" />
+                <div>
+                  <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+                    Password
+                  </label>
+                  <div className="mt-1 relative rounded-md shadow-sm">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <Lock className="h-5 w-5 text-gray-400" />
+                    </div>
+                    <input
+                      id="password"
+                      name="password"
+                      type="password"
+                      required
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="focus:ring-indigo-500 focus:border-indigo-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-md py-2 border"
+                      placeholder="Enter your password"
+                    />
+                  </div>
                 </div>
-                <input
-                  id="password"
-                  name="password"
-                  type="password"
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="focus:ring-indigo-500 focus:border-indigo-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-md py-2 border"
-                  placeholder="Enter your password"
-                />
-              </div>
-            </div>
 
-            <div>
-              <button
-                type="submit"
-                disabled={loading}
-                className={`w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white 
-                  ${loading ? 'bg-indigo-400 cursor-not-allowed' : 'bg-indigo-600 hover:bg-indigo-700'} 
-                  focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500`}
-              >
-                {loading ? 'Signing in...' : 'Sign In'}
-              </button>
-            </div>
+                <div>
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className={`w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white 
+                      ${loading ? 'bg-indigo-400 cursor-not-allowed' : 'bg-indigo-600 hover:bg-indigo-700'} 
+                      focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500`}
+                  >
+                    {loading ? 'Verifying...' : 'Next'}
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="text-center mb-4">
+                  <p className="text-sm text-gray-600">Enter the OTP sent to your registered device.</p>
+                  <p className="text-xs text-blue-500 mt-1 font-mono">Default: 123456</p>
+                </div>
+                <div>
+                  <label htmlFor="otp" className="block text-sm font-medium text-gray-700">
+                    One-Time Password
+                  </label>
+                  <div className="mt-1 relative rounded-md shadow-sm">
+                    <input
+                      id="otp"
+                      name="otp"
+                      type="text"
+                      required
+                      value={otp}
+                      onChange={(e) => setOtp(e.target.value)}
+                      className="focus:ring-indigo-500 focus:border-indigo-500 block w-full pl-3 sm:text-sm border-gray-300 rounded-md py-2 border tracking-widest text-center text-lg"
+                      placeholder="______"
+                      maxLength={6}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className={`w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white 
+                      ${loading ? 'bg-green-400 cursor-not-allowed' : 'bg-green-600 hover:bg-green-700'} 
+                      focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500`}
+                  >
+                    {loading ? 'Verifying OTP...' : 'Login'}
+                  </button>
+                </div>
+                <div className="text-center mt-2">
+                  <button
+                    type="button"
+                    onClick={() => { setStep('credentials'); setOtp(''); setError(''); }}
+                    className="text-sm text-gray-500 hover:text-gray-900 underline"
+                  >
+                    Back to Login
+                  </button>
+                </div>
+              </>
+            )}
 
             <div className="text-center mt-4">
               <p className="text-xs text-gray-500">

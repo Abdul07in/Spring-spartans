@@ -8,6 +8,12 @@ const PORT = 5000;
 app.use(cors());
 app.use(express.json());
 
+// Logger middleware
+app.use((req, res, next) => {
+    console.log(`${req.method} ${req.path}`);
+    next();
+});
+
 // Helper to calculate stats
 const calculateStats = (role) => {
     if (role === 'manager') {
@@ -56,6 +62,23 @@ app.post('/api/login', (req, res) => {
         return res.status(401).json({ success: false, message: 'Invalid credentials' });
     }
 
+    // Valid credentials now just return requirement for OTP
+    return res.json({ success: true, requireOtp: true, message: 'Credentials valid. Please enter OTP.', username });
+});
+
+// Verify OTP
+app.post('/api/verify-otp', (req, res) => {
+    const { username, otp } = req.body;
+
+    if (!username || !otp) {
+        return res.status(400).json({ success: false, message: 'Username and OTP required' });
+    }
+
+    // Hardcoded global OTP for simplicity as per requirement
+    if (otp !== '123456') {
+        return res.status(401).json({ success: false, message: 'Invalid OTP' });
+    }
+
     if (username === 'manager') {
         return res.json({ success: true, role: 'manager', redirect: '/dashboard', token: 'mock-jwt-manager' });
     }
@@ -86,14 +109,10 @@ app.get('/api/requests', (req, res) => {
     let filteredRequests = requests;
 
     if (role === 'manager') {
-        // Manager sees their own requests (simulated by 'manager' type or just all for now)
-        // AND pending approvals assigned to them
         filteredRequests = requests.filter(r => r.type === 'manager' || r.initiatedBy === 'manager');
     } else if (role === 'app_owner') {
-        // App owner sees requests pending THEIR approval
         filteredRequests = requests.filter(r => r.status === 'pending_app_owner');
     } else if (role === 'business_owner') {
-        // Business owner sees requests pending THEIR approval
         filteredRequests = requests.filter(r => r.status === 'pending_business_owner');
     }
 
@@ -133,14 +152,10 @@ app.post('/api/requests/:id/approve', (req, res) => {
         const request = requests[reqIndex];
 
         if (request.status === 'pending_app_owner') {
-            // Move to Business Owner
             request.status = 'pending_business_owner';
             res.json({ success: true, message: 'Approved by Application Owner. Pending Business Owner approval.' });
         } else if (request.status === 'pending_business_owner') {
-            // Final Approval
             request.status = 'approved';
-
-            // Grant Access (Simulate)
             userAccess.push({
                 id: `USR-${Date.now()}`,
                 userName: request.userName,
@@ -148,10 +163,8 @@ app.post('/api/requests/:id/approve', (req, res) => {
                 modules: request.modules || [],
                 role: 'User'
             });
-
             res.json({ success: true, message: 'Approved by Business Owner. Access granted.' });
         } else {
-            // Default behavior for other types
             request.status = 'approved';
             res.json({ success: true, message: 'Request approved' });
         }
@@ -210,7 +223,7 @@ app.post('/api/applications', (req, res) => {
     const newApp = {
         id: `APP-${Date.now()}`,
         applicationName,
-        userCount: 0, // Default
+        userCount: 0,
         owner,
         businessOwner,
         pending: 0,
@@ -227,15 +240,34 @@ app.get('/api/users', (req, res) => {
     res.json(userAccess);
 });
 
-// Delete User Access
+// Update User Access (Modules)
+app.put('/api/users/:id', (req, res) => {
+    const { id } = req.params;
+    const { modules } = req.body;
+    console.log(`[PUT] Update User ${id}, modules:`, modules);
+    const idx = userAccess.findIndex(u => u.id === id);
+
+    if (idx > -1) {
+        if (modules) {
+            userAccess[idx].modules = modules;
+        }
+        console.log(`[PUT] Success. New modules for ${userAccess[idx].userName}:`, userAccess[idx].modules);
+        res.json({ success: true, message: 'User access updated', user: userAccess[idx] });
+    } else {
+        console.log(`[PUT] User ${id} not found`);
+        res.status(404).json({ success: false, message: 'User not found' });
+    }
+});
+
+// Delete User Access (Single ID - Application Removal)
 app.delete('/api/users/:id', (req, res) => {
     const { id } = req.params;
     console.log(`[DELETE] Request received for user ID: ${id}`);
     const idx = userAccess.findIndex(u => u.id === id);
     console.log(`[DELETE] Found index: ${idx} for ID: ${id}`);
     if (idx > -1) {
-        userAccess.splice(idx, 1);
-        console.log(`[DELETE] User removed. New count: ${userAccess.length}`);
+        const removed = userAccess.splice(idx, 1);
+        console.log(`[DELETE] User removed: ${removed[0].userName}. New count: ${userAccess.length}`);
         res.json({ success: true, message: 'User access removed' });
     } else {
         console.log(`[DELETE] User not found.`);
@@ -243,7 +275,38 @@ app.delete('/api/users/:id', (req, res) => {
     }
 });
 
-// Get Owners List (for Admin dropdowns)
+// Revoke All Access for User
+app.delete('/api/users', (req, res) => {
+    const { userName } = req.query;
+    console.log(`[DELETE ALL] Request for user: ${userName}`);
+    if (!userName) {
+        return res.status(400).json({ success: false, message: 'UserName required' });
+    }
+
+    const initialLength = userAccess.length;
+    // Filter out entries for this user
+    const toRemove = userAccess.filter(u => u.userName === userName);
+    console.log(`[DELETE ALL] Found ${toRemove.length} records to remove for ${userName}`);
+
+    // Remove from main array
+    let removedCount = 0;
+    for (let i = userAccess.length - 1; i >= 0; i--) {
+        if (userAccess[i].userName === userName) {
+            userAccess.splice(i, 1);
+            removedCount++;
+        }
+    }
+
+    console.log(`[DELETE ALL] Removed ${removedCount} records. Remaining total: ${userAccess.length}`);
+
+    res.json({
+        success: true,
+        message: `Revoked ${removedCount} access records for ${userName}`,
+        removedCount: removedCount
+    });
+});
+
+// Get Owners List (for Admin dropdowns) - RESTORED
 app.get('/api/owners', (req, res) => {
     const appOwners = [...new Set(projects.map(p => p.owner))].filter(Boolean);
     const busOwners = [...new Set(projects.map(p => p.businessOwner))].filter(Boolean);

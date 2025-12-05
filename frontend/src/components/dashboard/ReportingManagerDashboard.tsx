@@ -207,6 +207,13 @@ const ReportingManagerDashboard: React.FC = () => {
                             <UserCog className="mr-2 h-4 w-4" />
                             Manage User Access
                         </button>
+                        <button
+                            onClick={() => navigate('/quarterly-review')}
+                            className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 transition-colors ml-2"
+                        >
+                            <FileText className="mr-2 h-4 w-4" />
+                            Quarterly Review
+                        </button>
                         <div className="h-8 w-8 rounded-full bg-gray-200 border border-gray-300"></div>
                         <button
                             onClick={handleLogout}

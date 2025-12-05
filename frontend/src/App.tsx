@@ -5,6 +5,7 @@ import ApplicationOwnerDashboard from './components/dashboard/ApplicationOwnerDa
 import BusinessOwnerDashboard from './components/dashboard/BusinessOwnerDashboard';
 import AdminDashboard from './components/dashboard/AdminDashboard';
 import ManageUserAccessPage from './components/dashboard/ManageUserAccessPage';
+import QuarterlyReviewPage from './components/dashboard/QuarterlyReviewPage';
 
 function App() {
   return (
@@ -16,6 +17,7 @@ function App() {
         <Route path="/business-owner" element={<BusinessOwnerDashboard />} />
         <Route path="/admin" element={<AdminDashboard />} />
         <Route path="/manage-access" element={<ManageUserAccessPage />} />
+        <Route path="/quarterly-review" element={<QuarterlyReviewPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
