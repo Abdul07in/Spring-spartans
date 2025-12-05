@@ -30,7 +30,9 @@ const ManageUserAccessPage: React.FC = () => {
 
     // Handlers
     const handleDelete = (id: string) => {
+        console.log("Delete clicked for", id);
         if (window.confirm('Are you sure you want to remove access for this user?')) {
+            console.log("Confirmation accepted for", id);
             // Optimistic update
             setUsers(prev => prev.filter(user => user.id !== id));
 
@@ -41,12 +43,17 @@ const ManageUserAccessPage: React.FC = () => {
                         // Revert if failed
                         fetchUsers();
                         alert('Failed to delete user');
+                    } else {
+                        console.log("Delete successful on backend");
                     }
                 })
                 .catch(err => {
                     console.error(err);
+                    alert(`Network Error: ${err.message}`);
                     fetchUsers();
                 });
+        } else {
+            console.log("Confirmation cancelled");
         }
     };
 

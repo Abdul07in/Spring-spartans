@@ -199,6 +199,29 @@ app.get('/api/applications', (req, res) => {
     res.json(mappedProjects);
 });
 
+// Create New Application (Admin)
+app.post('/api/applications', (req, res) => {
+    const { applicationName, owner, businessOwner, modules } = req.body;
+
+    if (!applicationName || !owner || !businessOwner) {
+        return res.status(400).json({ success: false, message: 'Missing required fields' });
+    }
+
+    const newApp = {
+        id: `APP-${Date.now()}`,
+        applicationName,
+        userCount: 0, // Default
+        owner,
+        businessOwner,
+        pending: 0,
+        lastReview: new Date().toISOString().split('T')[0],
+        modules: modules || []
+    };
+
+    projects.push(newApp);
+    res.json({ success: true, message: 'Application created successfully', application: newApp });
+});
+
 // User Access List (for Manager)
 app.get('/api/users', (req, res) => {
     res.json(userAccess);
@@ -207,11 +230,15 @@ app.get('/api/users', (req, res) => {
 // Delete User Access
 app.delete('/api/users/:id', (req, res) => {
     const { id } = req.params;
+    console.log(`[DELETE] Request received for user ID: ${id}`);
     const idx = userAccess.findIndex(u => u.id === id);
+    console.log(`[DELETE] Found index: ${idx} for ID: ${id}`);
     if (idx > -1) {
         userAccess.splice(idx, 1);
+        console.log(`[DELETE] User removed. New count: ${userAccess.length}`);
         res.json({ success: true, message: 'User access removed' });
     } else {
+        console.log(`[DELETE] User not found.`);
         res.status(404).json({ success: false, message: 'User not found' });
     }
 });

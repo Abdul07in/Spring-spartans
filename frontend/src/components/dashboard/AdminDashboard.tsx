@@ -1,8 +1,10 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Layers, Briefcase, Users, ShieldCheck, LogOut } from 'lucide-react';
+import { Layers, Briefcase, Users, ShieldCheck, LogOut, Plus } from 'lucide-react';
 import KPICard from './KPICard';
 import ApplicationCard from './ApplicationCard';
+import AddApplicationModal from './AddApplicationModal';
 import { ApplicationSummary } from '../../types/dashboard';
 
 interface AdminStats {
@@ -12,32 +14,66 @@ interface AdminStats {
     totalReportingManagers: number;
 }
 
-// Mock Data
-const MOCK_STATS: AdminStats = {
-    totalApplications: 156,
-    totalBusinessOwners: 34,
-    totalApplicationOwners: 89,
-    totalReportingManagers: 245
-};
-
-const MOCK_APPLICATIONS: ApplicationSummary[] = Array.from({ length: 12 }, (_, i) => ({
-    id: `APP-${5000 + i}`,
-    applicationName: ['Jira Software', 'Salesforce CRM', 'AWS Production', 'GitHub Enterprise', 'Slack', 'Confluence', 'ServiceNow', 'Oracle ERP', 'Tableau', 'Zoom', 'Figma', 'Datadog'][i],
-    userCount: Math.floor(Math.random() * 500) + 50,
-    applicationOwnerName: ['Sarah Connor', 'John Doe', 'Ellen Ripley', 'Tony Stark', 'Bruce Wayne', 'Clark Kent', 'Diana Prince', 'Peter Parker', 'Natasha Romanoff', 'Steve Rogers', 'Wanda Maximoff', 'Thor Odinson'][i],
-    businessOwnerName: ['Robert California', 'David Wallace', 'Jan Levinson', 'Charles Miner', 'Jo Bennett', 'Robert California', 'David Wallace', 'Jan Levinson', 'Charles Miner', 'Jo Bennett', 'Nellie Bertram', 'Andy Bernard'][i],
-    lastReviewDate: new Date(Date.now() - Math.random() * 10000000000).toISOString()
-}));
-
 const AdminDashboard: React.FC = () => {
-    const [stats] = useState<AdminStats>(MOCK_STATS);
-    const [applications] = useState<ApplicationSummary[]>(MOCK_APPLICATIONS);
+    const [stats, setStats] = useState<AdminStats>({
+        totalApplications: 0,
+        totalBusinessOwners: 0,
+        totalApplicationOwners: 0,
+        totalReportingManagers: 0
+    });
+    const [applications, setApplications] = useState<ApplicationSummary[]>([]);
+    const [loading, setLoading] = useState(false);
+    const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const navigate = useNavigate();
+
+    const fetchDashboardData = async () => {
+        setLoading(true);
+        try {
+            // Fetch Stats
+            const statsRes = await fetch('http://localhost:5000/api/dashboard/stats?role=admin');
+            const statsData = await statsRes.json();
+            setStats(statsData);
+
+            // Fetch Applications
+            const appsRes = await fetch('http://localhost:5000/api/applications?role=admin');
+            const appsData = await appsRes.json();
+            setApplications(appsData);
+        } catch (error) {
+            console.error("Error fetching admin dashboard data:", error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchDashboardData();
+    }, []);
 
     const handleLogout = () => {
         localStorage.removeItem('role');
         localStorage.removeItem('token');
         navigate('/');
+    };
+
+    const handleAddApplication = async (data: any) => {
+        try {
+            const response = await fetch('http://localhost:5000/api/applications', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            const result = await response.json();
+            if (result.success) {
+                alert('Application created successfully!');
+                // Refresh list
+                fetchDashboardData();
+            } else {
+                alert('Failed to create application: ' + result.message);
+            }
+        } catch (error) {
+            console.error("Error creating application:", error);
+            alert('Error creating application');
+        }
     };
 
     return (
@@ -96,25 +132,42 @@ const AdminDashboard: React.FC = () => {
                         <p className="mt-1 text-sm text-gray-500">Manage and monitor all applications across the organization.</p>
                     </div>
                     <div className="mt-4 sm:mt-0">
-                        <button className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        <button
+                            onClick={() => setIsAddModalOpen(true)}
+                            className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                        >
+                            <Plus size={16} className="mr-2" />
                             Add New Application
                         </button>
                     </div>
                 </div>
 
                 {/* Applications Grid */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                    {applications.map((app) => (
-                        <ApplicationCard
-                            key={app.id}
-                            applicationName={app.applicationName}
-                            userCount={app.userCount}
-                            applicationOwnerName={app.applicationOwnerName}
-                            businessOwnerName={app.businessOwnerName}
-                            lastReviewDate={app.lastReviewDate}
-                        />
-                    ))}
-                </div>
+                {loading ? (
+                    <div className="text-center py-10">
+                        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-indigo-600 mx-auto"></div>
+                        <p className="mt-2 text-gray-500">Loading data...</p>
+                    </div>
+                ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                        {applications.map((app) => (
+                            <ApplicationCard
+                                key={app.id}
+                                applicationName={app.applicationName}
+                                userCount={app.userCount}
+                                applicationOwnerName={app.applicationOwnerName}
+                                businessOwnerName={app.businessOwnerName}
+                                lastReviewDate={app.lastReviewDate}
+                            />
+                        ))}
+                    </div>
+                )}
+
+                <AddApplicationModal
+                    isOpen={isAddModalOpen}
+                    onClose={() => setIsAddModalOpen(false)}
+                    onSubmit={handleAddApplication}
+                />
             </main>
         </div>
     );

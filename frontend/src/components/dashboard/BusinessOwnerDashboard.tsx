@@ -12,39 +12,16 @@ interface BusinessOwnerStats {
     totalPendingRequests: number;
 }
 
-// Mock Data
-const MOCK_STATS: BusinessOwnerStats = {
-    totalApplications: 45,
-    totalAppOwners: 12,
-    totalPendingRequests: 67
-};
-
-const MOCK_REQUESTS: ReviewRequest[] = Array.from({ length: 67 }, (_, i) => ({
-    id: `BUS-REQ-${3000 + i}`,
-    userName: ['Michael Scott', 'Jim Halpert', 'Pam Beesly', 'Dwight Schrute', 'Stanley Hudson'][i % 5],
-    userEmail: ['michael@dundermifflin.com', 'jim@dundermifflin.com', 'pam@dundermifflin.com', 'dwight@dundermifflin.com', 'stanley@dundermifflin.com'][i % 5],
-    role: ['Branch Manager', 'Sales', 'Admin', 'Assistant to RM', 'Sales'][i % 5],
-    applicationName: ['Salesforce', 'NetSuite', 'Outlook', 'Slack', 'SharePoint'][i % 5],
-    requestedAction: (['retain', 'revoke', 'modify'] as const)[i % 3],
-    applicationOwnerName: ['David Wallace', 'Jan Levinson', 'Ryan Howard'][i % 3],
-    submittedDate: new Date(Date.now() - Math.random() * 800000000).toISOString(),
-    status: 'pending'
-}));
-
-const MOCK_APPLICATIONS: ApplicationSummary[] = Array.from({ length: 15 }, (_, i) => ({
-    id: `APP-BUS-${3000 + i}`,
-    applicationName: ['Salesforce', 'NetSuite', 'Outlook', 'Slack', 'SharePoint', 'Teams', 'Zoom', 'Workday'][i % 8],
-    userCount: Math.floor(Math.random() * 200) + 20,
-    applicationOwnerName: ['David Wallace', 'Jan Levinson', 'Ryan Howard'][i % 3],
-    businessOwnerName: 'Michael Scott',
-    pendingRequestsCount: Math.floor(Math.random() * 15),
-    lastReviewDate: new Date(Date.now() - Math.random() * 800000000).toISOString()
-}));
+// Mock Data REMOVED
 
 const BusinessOwnerDashboard: React.FC = () => {
-    const [stats, setStats] = useState<BusinessOwnerStats>(MOCK_STATS);
+    const [stats, setStats] = useState<BusinessOwnerStats>({
+        totalApplications: 0,
+        totalAppOwners: 0,
+        totalPendingRequests: 0
+    });
     const [requests, setRequests] = useState<ReviewRequest[]>([]);
-    const [applications] = useState<ApplicationSummary[]>(MOCK_APPLICATIONS);
+    const [applications, setApplications] = useState<ApplicationSummary[]>([]);
     const [page, setPage] = useState(1);
     const [pageSize, setPageSize] = useState(10);
     const [loading, setLoading] = useState(false);
@@ -53,17 +30,26 @@ const BusinessOwnerDashboard: React.FC = () => {
 
     useEffect(() => {
         setLoading(true);
-        fetch('http://localhost:5000/api/requests?role=business_owner')
-            .then(res => res.json())
-            .then(data => {
-                setRequests(data);
-                setStats(prev => ({ ...prev, totalPendingRequests: data.length }));
-                setLoading(false);
-            })
-            .catch(err => {
+        const fetchData = async () => {
+            try {
+                const statsRes = await fetch('http://localhost:5000/api/dashboard/stats?role=business_owner');
+                const statsData = await statsRes.json();
+                setStats(statsData);
+
+                const appsRes = await fetch('http://localhost:5000/api/applications?role=business_owner');
+                const appsData = await appsRes.json();
+                setApplications(appsData);
+
+                const reqRes = await fetch('http://localhost:5000/api/requests?role=business_owner');
+                const reqData = await reqRes.json();
+                setRequests(reqData);
+            } catch (err) {
                 console.error(err);
+            } finally {
                 setLoading(false);
-            });
+            }
+        };
+        fetchData();
     }, []);
 
     // Handlers

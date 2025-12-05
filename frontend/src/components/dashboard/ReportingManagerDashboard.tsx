@@ -7,40 +7,16 @@ import RaiseRequestModal from './RaiseRequestModal';
 import ReportingManagerApplications from './ReportingManagerApplications';
 import { ApplicationSummary, DashboardStats, ReviewRequest } from '../../types/dashboard';
 
-// Mock Data for Preview
-const MOCK_STATS: DashboardStats = {
-    totalUsers: 124,
-    totalPendingRequests: 45,
-    totalModifiedRequests: 12,
-    totalApplications: 8
-};
-
-const MOCK_REQUESTS: ReviewRequest[] = Array.from({ length: 45 }, (_, i) => ({
-    id: `REQ-${1000 + i}`,
-    userName: ['Alice Smith', 'Bob Johnson', 'Carol Williams', 'David Brown', 'Eva jones'][i % 5],
-    userEmail: ['alice@example.com', 'bob@company.com', 'carol@tech.com', 'david@corp.net', 'eva@sys.org'][i % 5],
-    role: ['Admin', 'Editor', 'Viewer', 'Contributor', 'Manager'][i % 5],
-    applicationName: ['Jira', 'Confluence', 'AWS Console', 'GitHub', 'Salesforce'][i % 5],
-    requestedAction: (['retain', 'revoke', 'modify'] as const)[i % 3],
-    submittedDate: new Date(Date.now() - Math.random() * 1000000000).toISOString(),
-    status: 'pending'
-}));
-
-const MOCK_APPLICATIONS: ApplicationSummary[] = Array.from({ length: 8 }, (_, i) => ({
-    id: `APP-${6000 + i}`,
-    applicationName: ['Jira', 'Confluence', 'AWS Console', 'GitHub', 'Salesforce', 'Zoom', 'Slack', 'Figma'][i],
-    userCount: Math.floor(Math.random() * 50) + 10,
-    applicationOwnerName: ['Sarah Connor', 'John Doe'][i % 2],
-    businessOwnerName: ['Robert California', 'David Wallace'][i % 2],
-    pendingRequestsCount: Math.floor(Math.random() * 10),
-    lastReviewDate: new Date(Date.now() - Math.random() * 1000000000).toISOString()
-}));
-
 const ReportingManagerDashboard: React.FC = () => {
     // State
-    const [stats, setStats] = useState<DashboardStats>(MOCK_STATS);
-    const [requests, setRequests] = useState<ReviewRequest[]>(MOCK_REQUESTS);
-    const [applications] = useState<ApplicationSummary[]>(MOCK_APPLICATIONS);
+    const [stats, setStats] = useState<DashboardStats>({
+        totalUsers: 0,
+        totalPendingRequests: 0,
+        totalModifiedRequests: 0,
+        totalApplications: 0
+    });
+    const [requests, setRequests] = useState<ReviewRequest[]>([]);
+    const [applications, setApplications] = useState<ApplicationSummary[]>([]);
     const [page, setPage] = useState(1);
     const [pageSize, setPageSize] = useState(10);
     const [loading, setLoading] = useState(false);
@@ -51,24 +27,31 @@ const ReportingManagerDashboard: React.FC = () => {
     // Fetch Requests from API
     useEffect(() => {
         setLoading(true);
-        // Fetch stats (mocked for now or implementation dependent)
 
-        // Fetch Requests
-        fetch('http://localhost:5000/api/requests?role=manager')
-            .then(res => res.json())
-            .then(data => {
-                setRequests(prev => {
-                    // Merge API requests with Mock for demo continuity if needed, or just replace
-                    // For this task, we want to see the NEW requests, so let's rely on API
-                    // But we also need the "Certificaton Reviews", so let's keep mock reviews + API requests
-                    return [...MOCK_REQUESTS, ...data];
-                });
+        const fetchData = async () => {
+            try {
+                // Fetch Stats
+                const statsRes = await fetch('http://localhost:5000/api/dashboard/stats?role=manager');
+                const statsData = await statsRes.json();
+                setStats(statsData);
+
+                // Fetch Applications
+                const appsRes = await fetch('http://localhost:5000/api/applications?role=manager');
+                const appsData = await appsRes.json();
+                setApplications(appsData);
+
+                // Fetch Requests
+                const reqRes = await fetch('http://localhost:5000/api/requests?role=manager');
+                const reqData = await reqRes.json();
+                setRequests(reqData);
+            } catch (err) {
+                console.error("Error fetching dashboard data:", err);
+            } finally {
                 setLoading(false);
-            })
-            .catch(err => {
-                console.error("Error fetching requests:", err);
-                setLoading(false);
-            });
+            }
+        };
+
+        fetchData();
     }, []);
 
     // Handlers
@@ -127,7 +110,6 @@ const ReportingManagerDashboard: React.FC = () => {
         localStorage.removeItem('token');
         navigate('/');
     };
-
 
     if (view === 'applications') {
         return (

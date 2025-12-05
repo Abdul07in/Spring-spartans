@@ -13,40 +13,17 @@ interface AppOwnerStats {
     totalReportingManagers: number;
 }
 
-// Mock Data
-const MOCK_STATS: AppOwnerStats = {
-    totalApplications: 15,
-    totalPendingRequests: 28,
-    totalCompletedApprovals: 145,
-    totalReportingManagers: 8
-};
-
-const MOCK_REQUESTS: ReviewRequest[] = Array.from({ length: 28 }, (_, i) => ({
-    id: `APP-REQ-${2000 + i}`,
-    userName: ['John Doe', 'Sarah Connor', 'Kyle Reese', 'Ellen Ripley', 'James Holden'][i % 5],
-    userEmail: ['john@example.com', 'sarah@skynet.com', 'kyle@resistance.org', 'ripley@weyland.com', 'hmc@expanse.org'][i % 5],
-    role: ['Developer', 'DevOps', 'Product Owner', 'Analyst', 'Admin'][i % 5],
-    applicationName: ['Payment Gateway', 'Customer Portal', 'Inventory System', 'HRMS', 'Analytics Suite'][i % 5],
-    requestedAction: (['retain', 'revoke', 'modify'] as const)[i % 3],
-    reportingManagerName: ['Manager Mike', 'Director Diana', 'Lead Larry'][i % 3],
-    submittedDate: new Date(Date.now() - Math.random() * 500000000).toISOString(),
-    status: 'pending'
-}));
-
-const MOCK_APPLICATIONS: ApplicationSummary[] = Array.from({ length: 15 }, (_, i) => ({
-    id: `APP-OWN-${2000 + i}`,
-    applicationName: ['Payment Gateway', 'Customer Portal', 'Inventory System', 'HRMS', 'Analytics Suite', 'Mobile App', 'Website', 'Intranet'][i % 8],
-    userCount: Math.floor(Math.random() * 100) + 10,
-    applicationOwnerName: 'John Doe',
-    businessOwnerName: ['Michael Scott', 'David Wallace', 'Jan Levinson'][i % 3],
-    pendingRequestsCount: Math.floor(Math.random() * 10),
-    lastReviewDate: new Date(Date.now() - Math.random() * 500000000).toISOString()
-}));
+// Mock Data REMOVED
 
 const ApplicationOwnerDashboard: React.FC = () => {
-    const [stats, setStats] = useState<AppOwnerStats>(MOCK_STATS);
+    const [stats, setStats] = useState<AppOwnerStats>({
+        totalApplications: 0,
+        totalPendingRequests: 0,
+        totalCompletedApprovals: 0,
+        totalReportingManagers: 0
+    });
     const [requests, setRequests] = useState<ReviewRequest[]>([]);
-    const [applications] = useState<ApplicationSummary[]>(MOCK_APPLICATIONS);
+    const [applications, setApplications] = useState<ApplicationSummary[]>([]);
     const [page, setPage] = useState(1);
     const [pageSize, setPageSize] = useState(10);
     const [loading, setLoading] = useState(false);
@@ -55,18 +32,26 @@ const ApplicationOwnerDashboard: React.FC = () => {
 
     useEffect(() => {
         setLoading(true);
-        fetch('http://localhost:5000/api/requests?role=app_owner')
-            .then(res => res.json())
-            .then(data => {
-                setRequests(data);
-                // Also update stats if needed
-                setStats(prev => ({ ...prev, totalPendingRequests: data.length }));
-                setLoading(false);
-            })
-            .catch(err => {
+        const fetchData = async () => {
+            try {
+                const statsRes = await fetch('http://localhost:5000/api/dashboard/stats?role=app_owner');
+                const statsData = await statsRes.json();
+                setStats(statsData);
+
+                const appsRes = await fetch('http://localhost:5000/api/applications?role=app_owner');
+                const appsData = await appsRes.json();
+                setApplications(appsData);
+
+                const reqRes = await fetch('http://localhost:5000/api/requests?role=app_owner');
+                const reqData = await reqRes.json();
+                setRequests(reqData);
+            } catch (err) {
                 console.error(err);
+            } finally {
                 setLoading(false);
-            });
+            }
+        };
+        fetchData();
     }, []);
 
     // Handlers
