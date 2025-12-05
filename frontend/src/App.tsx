@@ -1,9 +1,24 @@
-
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import LoginPage from './LoginPage';
+import ReportingManagerDashboard from './components/dashboard/ReportingManagerDashboard';
+import ApplicationOwnerDashboard from './components/dashboard/ApplicationOwnerDashboard';
+import BusinessOwnerDashboard from './components/dashboard/BusinessOwnerDashboard';
+import AdminDashboard from './components/dashboard/AdminDashboard';
+import ManageUserAccessPage from './components/dashboard/ManageUserAccessPage';
 
 function App() {
   return (
-    <LoginPage />
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<LoginPage />} />
+        <Route path="/dashboard" element={<ReportingManagerDashboard />} />
+        <Route path="/app-owner" element={<ApplicationOwnerDashboard />} />
+        <Route path="/business-owner" element={<BusinessOwnerDashboard />} />
+        <Route path="/admin" element={<AdminDashboard />} />
+        <Route path="/manage-access" element={<ManageUserAccessPage />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </BrowserRouter>
   );
 }
 
